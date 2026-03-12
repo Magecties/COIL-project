@@ -780,28 +780,31 @@
       const level = this.streak;
       let yBase = this.h;
       if (level >= 5) yBase = this.h * 0.5;
-      if (level >= 7) yBase = this.h * 0.2;
+      if (level >= 7) yBase = this.h * 0.15;
+      const baseSize = 4 + Math.random() * 8;
+      const sizeMult = level >= 7 ? 1.6 : level >= 6 ? 1.35 : level >= 5 ? 1.15 : 1;
+      const speedMult = level >= 7 ? 1.8 : level >= 6 ? 1.4 : level >= 5 ? 1.2 : 1;
       this.particles.push({
         x: Math.random() * this.w,
-        y: yBase + Math.random() * 80,
-        vx: (Math.random() - 0.5) * 2,
-        vy: -2 - Math.random() * 4,
+        y: yBase + Math.random() * (level >= 7 ? 120 : 80),
+        vx: (Math.random() - 0.5) * (2 * speedMult),
+        vy: (-2 - Math.random() * 4) * speedMult,
         life: 1,
-        size: 4 + Math.random() * 8,
-        hue: 25 + Math.random() * 35
+        size: baseSize * sizeMult,
+        hue: level >= 6 ? 20 + Math.random() * 25 : 25 + Math.random() * 35
       });
     },
     tick() {
       const level = this.streak;
       if (level >= 1 && this.particles.length < maxParticles()) {
-        const rate = level <= 2 ? 0.03 : level <= 4 ? 0.12 : level <= 6 ? 0.2 : 0.35;
+        const rate = level <= 2 ? 0.03 : level <= 4 ? 0.12 : level === 5 ? 0.45 : level === 6 ? 0.65 : 0.85;
         if (Math.random() < rate) this.addParticle();
       }
       this.particles = this.particles.filter(p => {
         p.x += p.vx;
         p.y += p.vy;
-        p.vy -= 0.02;
-        p.life -= 0.012;
+        p.vy -= this.streak >= 6 ? 0.03 : 0.02;
+        p.life -= this.streak >= 7 ? 0.008 : 0.012;
         return p.life > 0;
       });
       this.smoke = this.smoke.filter(s => {
@@ -824,51 +827,66 @@
       });
       ctx.globalAlpha = 1;
       this.particles.forEach(p => {
-        ctx.globalAlpha = p.life;
-        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2);
-        g.addColorStop(0, `hsla(${p.hue}, 90%, 60%, 0.9)`);
-        g.addColorStop(0.5, `hsla(${p.hue}, 85%, 50%, 0.4)`);
+        const rad = p.size * (this.streak >= 7 ? 2.5 : this.streak >= 6 ? 2.2 : 2);
+        const alpha = this.streak >= 6 ? Math.min(1, p.life * 1.2) : p.life;
+        ctx.globalAlpha = alpha;
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rad);
+        g.addColorStop(0, `hsla(${p.hue}, 95%, 65%, ${this.streak >= 6 ? 0.95 : 0.9})`);
+        g.addColorStop(0.4, `hsla(${p.hue}, 90%, 55%, 0.5)`);
         g.addColorStop(1, 'transparent');
         ctx.fillStyle = g;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
         ctx.fill();
       });
       ctx.globalAlpha = 1;
       if (this.streak >= 3 && this.streak < 8) {
         const grad = ctx.createLinearGradient(0, this.h, 0, 0);
-        const cutoff = this.streak >= 7 ? 0 : this.streak >= 5 ? 0.5 : 0.85;
-        grad.addColorStop(0, 'rgba(255, 100, 30, 0.15)');
+        const cutoff = this.streak >= 7 ? 0 : this.streak >= 6 ? 0.35 : this.streak >= 5 ? 0.55 : 0.85;
+        const intensity = this.streak >= 7 ? 0.35 : this.streak >= 6 ? 0.26 : this.streak >= 5 ? 0.2 : 0.15;
+        grad.addColorStop(0, `rgba(255, 90, 20, ${intensity})`);
+        grad.addColorStop(0.3, `rgba(255, 120, 40, ${intensity * 0.7})`);
         grad.addColorStop(cutoff, 'transparent');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, this.w, this.h);
       }
-      if (this.streak >= 7) {
-        const border = 12;
+      if (this.streak >= 6) {
+        const border = this.streak >= 7 ? 22 : 14;
+        const flicker = this.streak >= 7 ? 0.15 * Math.sin(Date.now() * 0.015) : 0;
         const g = ctx.createLinearGradient(0, 0, this.w, this.h);
-        g.addColorStop(0, 'rgba(255, 80, 20, 0.4)');
-        g.addColorStop(0.5, 'rgba(255, 150, 50, 0.25)');
-        g.addColorStop(1, 'rgba(255, 80, 20, 0.4)');
+        g.addColorStop(0, `rgba(255, 70, 15, ${0.5 + flicker})`);
+        g.addColorStop(0.5, `rgba(255, 160, 50, ${0.35 + flicker * 0.5})`);
+        g.addColorStop(1, `rgba(255, 70, 15, ${0.5 + flicker})`);
         ctx.strokeStyle = g;
         ctx.lineWidth = border;
         ctx.strokeRect(border / 2, border / 2, this.w - border, this.h - border);
+        if (this.streak >= 7) {
+          ctx.strokeStyle = `rgba(255, 200, 80, ${0.25 + flicker})`;
+          ctx.lineWidth = 8;
+          ctx.strokeRect(15, 15, this.w - 30, this.h - 30);
+        }
       }
     }
   };
 
   setInterval(() => {
-    if (fireSystem.streak >= 5 && fireSystem.particles.length < maxParticles()) {
-      fireSystem.particles.push({
-        x: fireSystem.w / 2 + (Math.random() - 0.5) * 80,
-        y: 70,
-        vx: (Math.random() - 0.5) * 1.5,
-        vy: -1.5 - Math.random() * 2,
-        life: 1,
-        size: 3 + Math.random() * 5,
-        hue: 28 + Math.random() * 25
-      });
+    const level = fireSystem.streak;
+    if (level >= 5 && fireSystem.particles.length < maxParticles()) {
+      const spread = level >= 7 ? 140 : level >= 6 ? 110 : 80;
+      const count = level >= 7 ? 2 : 1;
+      for (let i = 0; i < count; i++) {
+        fireSystem.particles.push({
+          x: fireSystem.w / 2 + (Math.random() - 0.5) * spread,
+          y: 60 + Math.random() * 30,
+          vx: (Math.random() - 0.5) * (level >= 7 ? 3 : 1.5),
+          vy: -2 - Math.random() * (level >= 7 ? 4 : 2),
+          life: 1,
+          size: level >= 7 ? 5 + Math.random() * 8 : 3 + Math.random() * 5,
+          hue: 22 + Math.random() * 28
+        });
+      }
     }
-  }, 200);
+  }, 120);
 
   function fireLoop() {
     fireSystem.tick();
