@@ -160,6 +160,13 @@
       cursor: pointer;
     }
     #fact-overlay.visible { display: flex; }
+    #fact-overlay .tap-continue-hint {
+      font-family: 'DM Sans', sans-serif;
+      font-size: clamp(14px, 3.5vw, 16px);
+      color: var(--amber);
+      margin-top: 16px;
+      opacity: 0.9;
+    }
     .fact-paper {
       background: linear-gradient(180deg, #2d2d44 0%, #1f1f35 100%);
       border: 2px solid rgba(255,107,53,0.5);
@@ -314,6 +321,7 @@
     @keyframes ripple {
       to { transform: scale(4); opacity: 0; }
     }
+
   </style>
 </head>
 <body>
@@ -342,6 +350,7 @@
     <div class="fact-paper" id="fact-paper">
       <div class="fact-label">Did you know?</div>
       <div class="fact-body" id="fact-body"></div>
+      <div class="tap-continue-hint">Tap to continue</div>
     </div>
   </div>
   <div id="game-over">
@@ -553,7 +562,7 @@
         }
         const answeredMyth = deck[0];
         deck.shift();
-        setTimeout(() => showFact(answeredMyth), 350);
+        setTimeout(() => showFact(answeredMyth), 450);
       } else {
         wrongAnswer();
       }
@@ -595,10 +604,11 @@
       factOverlay.classList.remove('visible');
       slideNextCard();
       factOverlay.removeEventListener('click', dismiss);
-      clearTimeout(autoDismiss);
+      factOverlay.removeEventListener('touchend', dismissTouch);
     };
+    const dismissTouch = (e) => { e.preventDefault(); dismiss(); };
     factOverlay.addEventListener('click', dismiss);
-    const autoDismiss = setTimeout(dismiss, 4000);
+    factOverlay.addEventListener('touchend', dismissTouch, { passive: false });
   }
 
   function slideNextCard() {
