@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <title>Myth Busters: NL × DK</title>
+  <title>MYTHBUSTERS NL VS DK</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -412,6 +412,18 @@
       font-size: clamp(24px, 6vw, 32px);
       font-weight: 700;
       margin-bottom: 20px;
+      position: relative;
+      background: linear-gradient(135deg, var(--orange) 0%, var(--gold) 25%, var(--amber) 50%, var(--danish-red) 100%);
+      background-size: 200% 200%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: title-fire 2.5s ease-in-out infinite;
+      filter: drop-shadow(0 0 20px rgba(255,107,53,0.5)) drop-shadow(0 0 40px rgba(244,162,97,0.25));
+    }
+    @keyframes title-fire {
+      0%, 100% { background-position: 0% 50%; filter: drop-shadow(0 0 20px rgba(255,107,53,0.5)) drop-shadow(0 0 40px rgba(244,162,97,0.25)); }
+      50% { background-position: 100% 50%; filter: drop-shadow(0 0 28px rgba(255,107,53,0.7)) drop-shadow(0 0 50px rgba(244,162,97,0.4)); }
     }
     #lobby .name-input-wrap { margin-bottom: 16px; width: 100%; max-width: 280px; }
     #lobby #player-name-input {
