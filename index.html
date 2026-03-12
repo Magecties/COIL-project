@@ -597,15 +597,54 @@
     "👑 Honorary citizen of both countries. Legendary."
   ];
 
+  const MAX_STREAK = 40;
+  const STREAK_CALM = 10;
+  const STREAK_FIRE_START = 15;
+  const STREAK_HALF = 25;
+  const STREAK_INFERNO = 35;
+  const STREAK_PERFECT = 40;
+
   const MYTHS = [
-    { myth: "Dutch people are the tallest in the world", answer: true, fact: "The average Dutch male stands 182.9cm tall — they grew 20cm taller over 150 years due to diet, healthcare and natural selection.", country: "nl" },
-    { myth: "Denmark is the happiest country in the world", answer: false, fact: "Denmark consistently ranks top 3 but Finland has held #1 in recent years. Denmark rarely drops below #2 though.", country: "dk" },
-    { myth: "The Netherlands has more bicycles than people", answer: true, fact: "There are ~23 million bikes for ~17.9 million people — 1.3 bikes per person. Amsterdam alone has more bikes than cars.", country: "nl" },
-    { myth: "The cheese danish was invented in Denmark", answer: false, fact: "It was invented by Austrian bakers brought to Denmark in the 1850s. Danes call it wienerbrød — Viennese bread.", country: "dk" },
-    { myth: "About 26% of the Netherlands is below sea level", answer: true, fact: "Without dikes and pumping systems, large parts of the country would be regularly flooded.", country: "nl" },
-    { myth: "Hygge has a direct English translation", answer: false, fact: "Hygge has no single English equivalent. It loosely means cozy contentment — but it's a whole lifestyle philosophy, not just a word.", country: "dk" },
-    { myth: "Dutch is the closest language to English", answer: false, fact: "Dutch and English are closely related West Germanic languages, but Frisian — also spoken in the Netherlands — is actually even closer to English.", country: "both" },
-    { myth: "Denmark has more pigs than people", answer: true, fact: "Denmark has ~15 million pigs for 5.9 million people — roughly 4 pigs per person and one of the world's biggest pork exporters.", country: "dk" }
+    { myth: "Denmark is the happiest country in the world", answer: false, fact: "Denmark consistently ranks top 3 but Finland has held #1 in the World Happiness Report in recent years. Denmark rarely drops below #2 though.", country: "dk" },
+    { myth: "The cheese danish was invented in Denmark", answer: false, fact: "It was created by Austrian bakers brought to Denmark in the 1850s. Danes call it wienerbrød — meaning Viennese bread.", country: "dk" },
+    { myth: "Denmark has more pigs than people", answer: true, fact: "Around 15 million pigs for 5.9 million people — roughly 4 pigs per person and one of the world's biggest pork exporters.", country: "dk" },
+    { myth: "LEGO is named after a Danish phrase", answer: true, fact: "LEGO comes from leg godt, meaning \"play well\" in Danish. The company was founded in a small workshop in Billund in 1932.", country: "dk" },
+    { myth: "Hygge has a direct English translation", answer: false, fact: "There is no single English word for it. It's a whole cultural philosophy of cozy togetherness, not just a feeling.", country: "dk" },
+    { myth: "Denmark is the oldest kingdom in the world", answer: true, fact: "The Danish monarchy dates back over 1,000 years, making it the oldest continuous kingdom on earth.", country: "dk" },
+    { myth: "Denmark is an archipelago made up of over 400 islands", answer: true, fact: "Denmark consists of the Jutland peninsula and 443 named islands, of which around 70 are inhabited.", country: "dk" },
+    { myth: "Bluetooth is named after a Danish Viking king", answer: true, fact: "Named after Harald Bluetooth, a Viking king who united Danish tribes. The Bluetooth logo is his initials in runic script.", country: "dk" },
+    { myth: "Denmark was once the largest empire in Northern Europe", answer: true, fact: "At its peak the Danish empire included Norway, Iceland, Greenland, parts of Sweden and territories in the Caribbean.", country: "dk" },
+    { myth: "Danish and Dutch people can understand each other's language", answer: false, fact: "They are completely different language families. Danish is North Germanic, Dutch is West Germanic — about as mutually intelligible as English and German.", country: "dk" },
+    { myth: "Denmark has won Eurovision more times than any other country", answer: false, fact: "Ireland holds the record with 7 wins. Denmark has won 3 times, most recently in 2013 with Emmelie de Forest.", country: "dk" },
+    { myth: "The Little Mermaid statue in Copenhagen is life-sized and tall", answer: false, fact: "The statue is famously tiny — only 1.25 meters tall. Most visitors are surprised by how small it is in person.", country: "dk" },
+    { myth: "Denmark was the first country to legalize same-sex partnerships", answer: true, fact: "Denmark became the first country in the world to legally recognize same-sex partnerships in 1989.", country: "dk" },
+    { myth: "Copenhagen was once a Viking fishing village", answer: true, fact: "The city's name comes from the Old Norse köpmannahöfn meaning \"merchants' harbour.\" It grew from a small fishing and trading settlement.", country: "dk" },
+    { myth: "Denmark has land borders with three countries", answer: false, fact: "Denmark only shares a land border with one country — Germany. Its other borders are all coastline.", country: "dk" },
+    { myth: "The Danish flag is the oldest national flag still in use", answer: true, fact: "The Dannebrog dates back to the 13th century and is recognized as the world's oldest continuously used national flag.", country: "dk" },
+    { myth: "Denmark produces more wind energy than it consumes", answer: true, fact: "Denmark regularly generates more electricity from wind than its entire population uses, exporting the surplus to neighboring countries.", country: "dk" },
+    { myth: "Hans Christian Andersen was born in Copenhagen", answer: false, fact: "He was born in Odense, Denmark's third largest city. He moved to Copenhagen as a teenager to pursue his creative ambitions.", country: "dk" },
+    { myth: "Danes drink more coffee per person than almost any nation on earth", answer: true, fact: "Denmark is consistently in the top 5 coffee-consuming nations globally, averaging around 4 cups per person per day.", country: "dk" },
+    { myth: "The word \"berserk\" comes from Danish Viking warriors", answer: true, fact: "Berserkers were Norse warriors who fought in a wild, trance-like fury. The word entered English directly from Old Norse.", country: "dk" },
+    { myth: "Dutch people are the tallest in the world", answer: true, fact: "The average Dutch male stands 182.9cm — the tallest national average on earth. They grew 20cm taller over 150 years due to diet, healthcare and natural selection.", country: "nl" },
+    { myth: "The Netherlands has more bicycles than people", answer: true, fact: "Around 23 million bikes for 17.9 million people — 1.3 bikes per person. Amsterdam alone has more bikes than cars.", country: "nl" },
+    { myth: "The Dutch invented the stock market", answer: true, fact: "The Amsterdam Stock Exchange, founded in 1602, is considered the world's first official stock exchange.", country: "nl" },
+    { myth: "The Netherlands exports more flowers than any other country", answer: true, fact: "Over 50% of all globally traded cut flowers come from the Netherlands, mostly through the massive Aalsmeer flower auction.", country: "nl" },
+    { myth: "About 26% of the Netherlands is below sea level", answer: true, fact: "Without dikes and pumping systems, large parts of the country would flood regularly. The Dutch have been managing water for over 1,000 years.", country: "nl" },
+    { myth: "Dutch is the closest language to English", answer: false, fact: "Frisian, also spoken in the Netherlands, is actually even closer to English than Dutch is. Both share West Germanic roots.", country: "nl" },
+    { myth: "Amsterdam has more canals than Venice", answer: true, fact: "Amsterdam has around 165 canals totaling over 100km. Venice has around 150. Amsterdam also has more bridges than Venice.", country: "nl" },
+    { myth: "The Dutch invented gin", answer: true, fact: "Genever, Dutch gin, was invented in the Netherlands in the 17th century. British soldiers encountered it during war and brought the concept back to England.", country: "nl" },
+    { myth: "The Netherlands is the world's second largest food exporter", answer: true, fact: "Despite being a tiny country, the Netherlands is the world's second largest exporter of food and agricultural products after the United States.", country: "nl" },
+    { myth: "Orange is the Dutch national color because of the flag", answer: false, fact: "The flag is red, white and blue. Orange comes from the royal House of Orange-Nassau — the color predates the modern flag design.", country: "nl" },
+    { myth: "The Netherlands has the highest population density in Europe", answer: false, fact: "The Netherlands is among the densest but Monaco, Malta and San Marino all rank higher. The Netherlands is the densest of any large EU nation though.", country: "nl" },
+    { myth: "Tulips originally came from the Netherlands", answer: false, fact: "Tulips are native to Central Asia and Turkey. They were imported to the Netherlands in the 16th century and the Dutch simply became the world's best at growing and selling them.", country: "nl" },
+    { myth: "The Dutch had a colony in what is now New York City", answer: true, fact: "New York was originally called New Amsterdam and founded as a Dutch colonial trading post in 1626. The British took it over in 1664 and renamed it.", country: "nl" },
+    { myth: "The Netherlands has the most museums per capita in the world", answer: true, fact: "With over 400 museums for a population of under 18 million, the Netherlands has more museums per person than any other country.", country: "nl" },
+    { myth: "Sinterklaas is the original inspiration for Santa Claus", answer: true, fact: "The American Santa Claus figure was directly inspired by Dutch immigrants bringing their Sinterklaas traditions to New York in the 17th and 18th centuries.", country: "nl" },
+    { myth: "The Dutch word for cheese is kaas", answer: true, fact: "The Netherlands produces around 900 million kg of cheese per year. Gouda accounts for over 50% of all Dutch cheese production.", country: "nl" },
+    { myth: "Rotterdam is the largest port in the world", answer: false, fact: "Rotterdam is the largest port in Europe but ranks around 11th globally. The world's largest ports are all in China, led by Shanghai.", country: "nl" },
+    { myth: "The Netherlands once sold Manhattan for 60 guilders worth of trade goods", answer: true, fact: "In 1626 Dutch colonist Peter Minuit purchased Manhattan from the Lenape people for approximately 60 guilders worth of goods — one of history's most debated real estate deals.", country: "nl" },
+    { myth: "Dutch people celebrate two Christmases", answer: true, fact: "The Netherlands celebrates both Sinterklaas on December 5th (the main gift-giving event) and Christmas on December 25th — essentially two separate festive holidays.", country: "nl" },
+    { myth: "The Netherlands is home to the world's largest flower auction", answer: true, fact: "The Royal FloraHolland auction in Aalsmeer processes around 42 million flowers and plants every single day, making it the largest commercial flower transaction in the world.", country: "nl" }
   ];
 
   const isMobile = () => window.innerWidth < 768;
@@ -846,7 +885,7 @@
 
   function updateStreak() {
     streakNum.textContent = streak;
-    streakWrap.classList.toggle('on-fire', streak >= 5);
+    streakWrap.classList.toggle('on-fire', streak >= STREAK_HALF);
   }
 
   function getClientX(e) {
@@ -923,11 +962,11 @@
         updateStreak();
         fireSystem.setStreak(streak);
         screenShake(8);
-        if (streak >= 7) {
+        if (streak >= STREAK_INFERNO) {
           onFireFlash.classList.add('flash');
           setTimeout(() => onFireFlash.classList.remove('flash'), 400);
         }
-        if (streak === 3) {
+        if (streak === STREAK_FIRE_START) {
           onFireText.classList.add('visible');
           setTimeout(() => onFireText.classList.remove('visible'), 2000);
         }
@@ -1075,7 +1114,8 @@
 
   function showGameOver(score) {
     finalScoreEl.textContent = 'Score: ' + score;
-    ratingTextEl.textContent = RATINGS[Math.min(score, 8)];
+    const ratingIndex = Math.min(8, Math.floor(score / 5));
+    ratingTextEl.textContent = RATINGS[ratingIndex];
     personalBestBanner.classList.remove('visible');
     currentPlayerDocId = null;
     if (firestore && leaderboardCol && playerName) {
@@ -1177,32 +1217,32 @@
       if (this.particles.length >= maxParticles()) return;
       const level = this.streak;
       let yBase = this.h;
-      if (level >= 5) yBase = this.h * 0.5;
-      if (level >= 7) yBase = this.h * 0.15;
+      if (level >= STREAK_HALF) yBase = this.h * 0.5;
+      if (level >= STREAK_INFERNO) yBase = this.h * 0.15;
       const baseSize = 4 + Math.random() * 8;
-      const sizeMult = level >= 7 ? 1.6 : level >= 6 ? 1.35 : level >= 5 ? 1.15 : 1;
-      const speedMult = level >= 7 ? 1.8 : level >= 6 ? 1.4 : level >= 5 ? 1.2 : 1;
+      const sizeMult = level >= STREAK_INFERNO ? 1.6 : level >= 30 ? 1.35 : level >= STREAK_HALF ? 1.15 : 1;
+      const speedMult = level >= STREAK_INFERNO ? 1.8 : level >= 30 ? 1.4 : level >= STREAK_HALF ? 1.2 : 1;
       this.particles.push({
         x: Math.random() * this.w,
-        y: yBase + Math.random() * (level >= 7 ? 120 : 80),
+        y: yBase + Math.random() * (level >= STREAK_INFERNO ? 120 : 80),
         vx: (Math.random() - 0.5) * (2 * speedMult),
         vy: (-2 - Math.random() * 4) * speedMult,
         life: 1,
         size: baseSize * sizeMult,
-        hue: level >= 6 ? 20 + Math.random() * 25 : 25 + Math.random() * 35
+        hue: level >= 30 ? 20 + Math.random() * 25 : 25 + Math.random() * 35
       });
     },
     tick() {
       const level = this.streak;
       if (level >= 1 && this.particles.length < maxParticles()) {
-        const rate = level <= 2 ? 0.03 : level <= 4 ? 0.12 : level === 5 ? 0.45 : level === 6 ? 0.65 : 0.85;
+        const rate = level <= STREAK_CALM ? 0.03 : level <= 20 ? 0.12 : level < 30 ? 0.45 : level < STREAK_INFERNO ? 0.65 : 0.85;
         if (Math.random() < rate) this.addParticle();
       }
       this.particles = this.particles.filter(p => {
         p.x += p.vx;
         p.y += p.vy;
-        p.vy -= this.streak >= 6 ? 0.03 : 0.02;
-        p.life -= this.streak >= 7 ? 0.008 : 0.012;
+        p.vy -= this.streak >= 30 ? 0.03 : 0.02;
+        p.life -= this.streak >= STREAK_INFERNO ? 0.008 : 0.012;
         return p.life > 0;
       });
       this.smoke = this.smoke.filter(s => {
@@ -1225,11 +1265,11 @@
       });
       ctx.globalAlpha = 1;
       this.particles.forEach(p => {
-        const rad = p.size * (this.streak >= 7 ? 2.5 : this.streak >= 6 ? 2.2 : 2);
-        const alpha = this.streak >= 6 ? Math.min(1, p.life * 1.2) : p.life;
+        const rad = p.size * (this.streak >= STREAK_INFERNO ? 2.5 : this.streak >= 30 ? 2.2 : 2);
+        const alpha = this.streak >= 30 ? Math.min(1, p.life * 1.2) : p.life;
         ctx.globalAlpha = alpha;
         const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, rad);
-        g.addColorStop(0, `hsla(${p.hue}, 95%, 65%, ${this.streak >= 6 ? 0.95 : 0.9})`);
+        g.addColorStop(0, `hsla(${p.hue}, 95%, 65%, ${this.streak >= 30 ? 0.95 : 0.9})`);
         g.addColorStop(0.4, `hsla(${p.hue}, 90%, 55%, 0.5)`);
         g.addColorStop(1, 'transparent');
         ctx.fillStyle = g;
@@ -1238,19 +1278,19 @@
         ctx.fill();
       });
       ctx.globalAlpha = 1;
-      if (this.streak >= 3 && this.streak < 8) {
+      if (this.streak >= STREAK_FIRE_START && this.streak < STREAK_PERFECT) {
         const grad = ctx.createLinearGradient(0, this.h, 0, 0);
-        const cutoff = this.streak >= 7 ? 0 : this.streak >= 6 ? 0.35 : this.streak >= 5 ? 0.55 : 0.85;
-        const intensity = this.streak >= 7 ? 0.35 : this.streak >= 6 ? 0.26 : this.streak >= 5 ? 0.2 : 0.15;
+        const cutoff = this.streak >= STREAK_INFERNO ? 0 : this.streak >= 30 ? 0.35 : this.streak >= STREAK_HALF ? 0.55 : 0.85;
+        const intensity = this.streak >= STREAK_INFERNO ? 0.35 : this.streak >= 30 ? 0.26 : this.streak >= STREAK_HALF ? 0.2 : 0.15;
         grad.addColorStop(0, `rgba(255, 90, 20, ${intensity})`);
         grad.addColorStop(0.3, `rgba(255, 120, 40, ${intensity * 0.7})`);
         grad.addColorStop(cutoff, 'transparent');
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, this.w, this.h);
       }
-      if (this.streak >= 6) {
-        const border = this.streak >= 7 ? 22 : 14;
-        const flicker = this.streak >= 7 ? 0.15 * Math.sin(Date.now() * 0.015) : 0;
+      if (this.streak >= 30) {
+        const border = this.streak >= STREAK_INFERNO ? 22 : 14;
+        const flicker = this.streak >= STREAK_INFERNO ? 0.15 * Math.sin(Date.now() * 0.015) : 0;
         const g = ctx.createLinearGradient(0, 0, this.w, this.h);
         g.addColorStop(0, `rgba(255, 70, 15, ${0.5 + flicker})`);
         g.addColorStop(0.5, `rgba(255, 160, 50, ${0.35 + flicker * 0.5})`);
@@ -1258,7 +1298,7 @@
         ctx.strokeStyle = g;
         ctx.lineWidth = border;
         ctx.strokeRect(border / 2, border / 2, this.w - border, this.h - border);
-        if (this.streak >= 7) {
+        if (this.streak >= STREAK_INFERNO) {
           ctx.strokeStyle = `rgba(255, 200, 80, ${0.25 + flicker})`;
           ctx.lineWidth = 8;
           ctx.strokeRect(15, 15, this.w - 30, this.h - 30);
@@ -1269,17 +1309,17 @@
 
   setInterval(() => {
     const level = fireSystem.streak;
-    if (level >= 5 && fireSystem.particles.length < maxParticles()) {
-      const spread = level >= 7 ? 140 : level >= 6 ? 110 : 80;
-      const count = level >= 7 ? 2 : 1;
+    if (level >= STREAK_HALF && fireSystem.particles.length < maxParticles()) {
+      const spread = level >= STREAK_INFERNO ? 140 : level >= 30 ? 110 : 80;
+      const count = level >= STREAK_INFERNO ? 2 : 1;
       for (let i = 0; i < count; i++) {
         fireSystem.particles.push({
           x: fireSystem.w / 2 + (Math.random() - 0.5) * spread,
           y: 60 + Math.random() * 30,
-          vx: (Math.random() - 0.5) * (level >= 7 ? 3 : 1.5),
-          vy: -2 - Math.random() * (level >= 7 ? 4 : 2),
+          vx: (Math.random() - 0.5) * (level >= STREAK_INFERNO ? 3 : 1.5),
+          vy: -2 - Math.random() * (level >= STREAK_INFERNO ? 4 : 2),
           life: 1,
-          size: level >= 7 ? 5 + Math.random() * 8 : 3 + Math.random() * 5,
+          size: level >= STREAK_INFERNO ? 5 + Math.random() * 8 : 3 + Math.random() * 5,
           hue: 22 + Math.random() * 28
         });
       }
