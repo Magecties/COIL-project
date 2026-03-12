@@ -226,6 +226,36 @@
       transition: transform 0.15s, box-shadow 0.15s;
     }
     #play-again:hover, #play-again:active { transform: scale(1.05); box-shadow: 0 8px 28px rgba(255,107,53,0.5); }
+    #stats-screen {
+      position: fixed;
+      top: 50%;
+      right: 24px;
+      transform: translate(100%, -50%);
+      z-index: 22;
+      display: none;
+      flex-direction: column;
+      align-items: flex-end;
+      text-align: right;
+      padding: 0;
+      transition: transform 0.3s ease-out;
+      pointer-events: none;
+    }
+    #stats-screen.visible {
+      display: flex;
+      transform: translate(0, -50%);
+      pointer-events: auto;
+    }
+    .stats-strip {
+      margin-bottom: 20px;
+    }
+    .stats-strip:last-of-type { margin-bottom: 16px; }
+    .stats-label { font-family: 'Fraunces', serif; font-size: clamp(14px, 3.2vw, 16px); font-weight: 700; margin-bottom: 4px; color: var(--white); }
+    .stats-meta { font-size: clamp(12px, 2.6vw, 13px); opacity: 0.85; margin-bottom: 2px; }
+    .stats-pct { font-family: 'Fraunces', serif; font-size: clamp(28px, 7vw, 34px); font-weight: 700; }
+    .stats-pct.pct-green { color: #00c864; }
+    .stats-pct.pct-orange { color: var(--orange); }
+    .stats-pct.pct-red { color: var(--danish-red); }
+    .stats-comparison { font-family: 'Fraunces', serif; font-size: clamp(13px, 3.2vw, 15px); font-weight: 700; text-align: right; line-height: 1.35; padding-top: 12px; margin-top: 4px; max-width: 200px; }
 
     #personal-best-banner {
       font-family: 'Fraunces', serif;
@@ -414,6 +444,30 @@
     #lobby #lobby-start-btn:hover { transform: scale(1.03); }
     #lobby #lobby-start-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
+    .community-knowledge-title { font-family: 'Fraunces', serif; font-size: clamp(14px, 3.5vw, 16px); margin: 16px 0 10px; opacity: 0.95; }
+    .community-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .community-bar-label { font-size: clamp(13px, 3vw, 14px); width: 90px; flex-shrink: 0; }
+    .community-bar-track {
+      flex: 1 1 0;
+      min-width: 0;
+      height: 20px;
+      background: rgba(0,0,0,0.35);
+      border-radius: 10px;
+      overflow: hidden;
+      border: 2px solid rgba(255,107,53,0.3);
+    }
+    .community-bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 8px;
+      transition: none;
+      flex-shrink: 0;
+    }
+    .community-bar-fill.nl-fill { background: linear-gradient(90deg, var(--orange), var(--gold)); }
+    .community-bar-fill.dk-fill { background: linear-gradient(90deg, var(--danish-red), var(--amber)); }
+    .community-bar-pct { font-family: 'Fraunces', serif; font-size: clamp(14px, 3.5vw, 16px); font-weight: 700; width: 82px; flex-shrink: 0; text-align: right; }
+    .community-summary { font-size: clamp(12px, 2.8vw, 13px); margin-top: 10px; opacity: 0.9; font-style: italic; }
+
     @keyframes headline-slam {
       to { transform: translateY(0); }
     }
@@ -523,6 +577,18 @@
       <div class="leaderboard-header"><span>#</span><span>Name</span><span>Score</span><span>Time</span></div>
       <div class="leaderboard-body" id="leaderboard-tbody"></div>
     </div>
+    <div class="community-knowledge-title">Community Knowledge</div>
+    <div class="community-bar-row">
+      <span class="community-bar-label">🇳🇱 Dutch</span>
+      <div class="community-bar-track"><div class="community-bar-fill nl-fill" id="community-nl-fill"></div></div>
+      <span class="community-bar-pct" id="community-nl-pct">0% correct</span>
+    </div>
+    <div class="community-bar-row">
+      <span class="community-bar-label">🇩🇰 Danish</span>
+      <div class="community-bar-track"><div class="community-bar-fill dk-fill" id="community-dk-fill"></div></div>
+      <span class="community-bar-pct" id="community-dk-pct">0% correct</span>
+    </div>
+    <p class="community-summary" id="community-summary">Loading…</p>
     <button type="button" id="lobby-start-btn">Start</button>
   </div>
   <div id="game-wrap">
@@ -563,6 +629,19 @@
       <div class="leaderboard-body" id="game-over-leaderboard-tbody"></div>
     </div>
     <button id="play-again">Play Again</button>
+  </div>
+  <div id="stats-screen">
+    <div class="stats-strip">
+      <div class="stats-label">🇳🇱 Dutch</div>
+      <div class="stats-meta" id="nl-meta">0 seen · 0 correct</div>
+      <div class="stats-pct" id="nl-pct">0%</div>
+    </div>
+    <div class="stats-strip">
+      <div class="stats-label">🇩🇰 Danish</div>
+      <div class="stats-meta" id="dk-meta">0 seen · 0 correct</div>
+      <div class="stats-pct" id="dk-pct">0%</div>
+    </div>
+    <p class="stats-comparison" id="stats-comparison"></p>
   </div>
   <canvas id="confetti-canvas"></canvas>
   <div id="whiteout"></div>
@@ -653,6 +732,7 @@
   let deck = [];
   let streak = 0;
   let gameOver = false;
+  let nlSeen = 0, nlCorrect = 0, dkSeen = 0, dkCorrect = 0, bothWrong = 0;
   let dragStartX = 0, dragStartY = 0, currentX = 0;
   let isDragging = false;
   let idleAngle = 0, idleY = 0, idlePhase = 0;
@@ -675,12 +755,23 @@
   const finalScoreEl = document.getElementById('final-score');
   const ratingTextEl = document.getElementById('rating-text');
   const playAgainBtn = document.getElementById('play-again');
+  const statsScreenEl = document.getElementById('stats-screen');
+  const nlMetaEl = document.getElementById('nl-meta');
+  const nlPctEl = document.getElementById('nl-pct');
+  const dkMetaEl = document.getElementById('dk-meta');
+  const dkPctEl = document.getElementById('dk-pct');
+  const statsComparisonEl = document.getElementById('stats-comparison');
   const lobbyEl = document.getElementById('lobby');
   const playerNameInput = document.getElementById('player-name-input');
   const nameErrorEl = document.getElementById('name-error');
   const leaderboardTbody = document.getElementById('leaderboard-tbody');
   const gameOverLeaderboardTbody = document.getElementById('game-over-leaderboard-tbody');
   const lobbyStartBtn = document.getElementById('lobby-start-btn');
+  const communityNlFill = document.getElementById('community-nl-fill');
+  const communityNlPct = document.getElementById('community-nl-pct');
+  const communityDkFill = document.getElementById('community-dk-fill');
+  const communityDkPct = document.getElementById('community-dk-pct');
+  const communitySummary = document.getElementById('community-summary');
   const personalBestBanner = document.getElementById('personal-best-banner');
   const onFireFlash = document.getElementById('on-fire-flash');
   const onFireText = document.getElementById('on-fire-text');
@@ -697,6 +788,7 @@
   let leaderboardCol = null;
   let previousLeaderboardEntries = [];
   let hasPoppedForDocId = null;
+  let communityStatsAnimatedOnce = false;
 
   const hasFirebaseConfig = firebaseConfig && typeof firebaseConfig.apiKey === 'string' && firebaseConfig.apiKey.length > 1;
   if (typeof firebase !== 'undefined' && hasFirebaseConfig) {
@@ -732,7 +824,81 @@
           renderLeaderboard(gameOverLeaderboardTbody, latestLeaderboardEntries, currentPlayerDocId, { newEntryId, rankChangedIds, displacedIds, isCascade: false });
         }
       }, (err) => console.warn('Leaderboard listener error', err));
+      leaderboardCol.onSnapshot((snapshot) => {
+        let sumNlCorrect = 0, sumNlTotal = 0, sumDkCorrect = 0, sumDkTotal = 0;
+        snapshot.docs.forEach(doc => {
+          const d = doc.data();
+          sumNlCorrect += d.nl_correct != null ? Number(d.nl_correct) : 0;
+          sumNlTotal += d.nl_total != null ? Number(d.nl_total) : 0;
+          sumDkCorrect += d.dk_correct != null ? Number(d.dk_correct) : 0;
+          sumDkTotal += d.dk_total != null ? Number(d.dk_total) : 0;
+        });
+        const nlPct = sumNlTotal > 0 ? (sumNlCorrect / sumNlTotal) * 100 : 0;
+        const dkPct = sumDkTotal > 0 ? (sumDkCorrect / sumDkTotal) * 100 : 0;
+        updateCommunityKnowledge(nlPct, dkPct);
+      }, (err) => console.warn('Community stats listener error', err));
     } catch (e) { console.warn('Firebase init error', e); }
+  }
+
+  function animateCommunityBar(fillEl, pctEl, targetPct, durationMs, overshootPct) {
+    if (!fillEl || !pctEl) return;
+    const overshoot = Math.min(100, targetPct + (overshootPct || 3));
+    const startTime = performance.now();
+    function tick(now) {
+      const elapsed = now - startTime;
+      if (elapsed < durationMs) {
+        const t = elapsed / durationMs;
+        const easeOut = 1 - (1 - t) * (1 - t);
+        const current = overshoot * easeOut;
+        fillEl.style.width = current + '%';
+        pctEl.textContent = Math.round(current) + '% correct';
+        requestAnimationFrame(tick);
+        return;
+      }
+      if (elapsed < durationMs + 200) {
+        const t = (elapsed - durationMs) / 200;
+        const current = overshoot + (targetPct - overshoot) * t;
+        fillEl.style.width = current + '%';
+        pctEl.textContent = Math.round(current) + '% correct';
+        requestAnimationFrame(tick);
+        return;
+      }
+      fillEl.style.width = targetPct + '%';
+      pctEl.textContent = Math.round(targetPct) + '% correct';
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function updateCommunityKnowledge(nlPct, dkPct) {
+    if (!communityNlFill || !communityDkFill) return;
+    const gap = Math.abs(nlPct - dkPct);
+    if (nlPct === 0 && dkPct === 0) {
+      communitySummary.textContent = 'No community data yet';
+    } else if (gap <= 5) {
+      communitySummary.textContent = 'Players are equally matched on both';
+    } else if (nlPct > dkPct) {
+      communitySummary.textContent = 'Players find Dutch myths easier';
+    } else {
+      communitySummary.textContent = 'Players find Danish myths easier';
+    }
+    const lobbyVisible = !lobbyEl.classList.contains('hidden');
+    const doInitialAnimation = lobbyVisible && !communityStatsAnimatedOnce;
+    if (doInitialAnimation) {
+      communityStatsAnimatedOnce = true;
+      communityNlFill.style.width = '0%';
+      communityDkFill.style.width = '0%';
+    communityNlPct.textContent = '0% correct';
+    communityDkPct.textContent = '0% correct';
+      requestAnimationFrame(() => {
+        animateCommunityBar(communityNlFill, communityNlPct, nlPct, 1000, 3);
+        animateCommunityBar(communityDkFill, communityDkPct, dkPct, 1000, 3);
+      });
+    } else {
+      communityNlFill.style.width = nlPct + '%';
+      communityDkFill.style.width = dkPct + '%';
+      communityNlPct.textContent = Math.round(nlPct) + '% correct';
+      communityDkPct.textContent = Math.round(dkPct) + '% correct';
+    }
   }
 
   function timeAgo(timestamp) {
@@ -768,6 +934,61 @@
     }
     requestAnimationFrame(tick);
   }
+
+  function animatePercentage(el, targetPct, duration) {
+    if (targetPct == null || isNaN(targetPct)) { el.textContent = targetPct + '%'; return; }
+    const start = performance.now();
+    const finalVal = Math.round(targetPct * 10) / 10;
+    function tick(now) {
+      const t = Math.min((now - start) / duration, 1);
+      const easeOut = 1 - (1 - t) * (1 - t);
+      const current = targetPct * easeOut;
+      el.textContent = (Math.round(current * 10) / 10) + '%';
+      if (t < 1) requestAnimationFrame(tick);
+      else el.textContent = finalVal + '%';
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function showStats() {
+    const nlTotal = nlSeen + bothWrong;
+    const dkTotal = dkSeen + bothWrong;
+    const nlPct = nlTotal > 0 ? (nlCorrect / nlTotal) * 100 : 0;
+    const dkPct = dkTotal > 0 ? (dkCorrect / dkTotal) * 100 : 0;
+
+    nlMetaEl.textContent = nlTotal + ' seen · ' + nlCorrect + ' correct';
+    dkMetaEl.textContent = dkTotal + ' seen · ' + dkCorrect + ' correct';
+
+    nlPctEl.textContent = '0%';
+    dkPctEl.textContent = '0%';
+    nlPctEl.classList.remove('pct-green', 'pct-orange', 'pct-red');
+    dkPctEl.classList.remove('pct-green', 'pct-orange', 'pct-red');
+    if (nlPct > 70) nlPctEl.classList.add('pct-green');
+    else if (nlPct < 50) nlPctEl.classList.add('pct-red');
+    else nlPctEl.classList.add('pct-orange');
+    if (dkPct > 70) dkPctEl.classList.add('pct-green');
+    else if (dkPct < 50) dkPctEl.classList.add('pct-red');
+    else dkPctEl.classList.add('pct-orange');
+
+    const diff = Math.abs(nlPct - dkPct);
+    if (diff <= 5 && (nlTotal > 0 || dkTotal > 0)) {
+      statsComparisonEl.textContent = 'Perfectly balanced — you\'re truly bicultural 🤝';
+    } else if (nlPct > dkPct) {
+      statsComparisonEl.textContent = 'You were better at Dutch myths 🇳🇱';
+    } else if (dkPct > nlPct) {
+      statsComparisonEl.textContent = 'You know your Danish facts better 🇩🇰';
+    } else {
+      statsComparisonEl.textContent = 'Perfectly balanced — you\'re truly bicultural 🤝';
+    }
+
+
+    statsScreenEl.classList.add('visible');
+    setTimeout(() => {
+      animatePercentage(nlPctEl, nlPct, 600);
+      animatePercentage(dkPctEl, dkPct, 600);
+    }, 250);
+  }
+
 
   function renderLeaderboard(tbody, entries, highlightDocId, opts) {
     if (!tbody) return;
@@ -855,11 +1076,13 @@
     gameOver = false;
     streak = 0;
     maxStreakThisGame = 0;
+    nlSeen = 0; nlCorrect = 0; dkSeen = 0; dkCorrect = 0; bothWrong = 0;
     deck = shuffle(MYTHS);
     updateStreak();
     streakWrap.classList.toggle('on-fire', false);
     factOverlay.classList.remove('visible');
     gameOverEl.classList.remove('visible');
+    statsScreenEl.classList.remove('visible');
     whiteoutEl.classList.remove('explode');
     fireSystem.reset();
     showNextCard();
@@ -971,9 +1194,18 @@
           setTimeout(() => onFireText.classList.remove('visible'), 2000);
         }
         const answeredMyth = deck[0];
+        const c = answeredMyth.country;
+        if (c === 'nl') { nlSeen++; nlCorrect++; }
+        else if (c === 'dk') { dkSeen++; dkCorrect++; }
+        else if (c === 'both') { /* correct: no stat impact */ }
         deck.shift();
         setTimeout(() => showFact(answeredMyth), 450);
       } else {
+        const answeredMyth = deck[0];
+        const c = answeredMyth.country;
+        if (c === 'nl') nlSeen++;
+        else if (c === 'dk') dkSeen++;
+        else if (c === 'both') bothWrong++;
         wrongAnswer();
       }
     } else {
@@ -1123,7 +1355,11 @@
         username: playerName.trim().slice(0, 20),
         score: score,
         maxStreak: maxStreakThisGame,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        nl_correct: nlCorrect,
+        nl_total: nlSeen + bothWrong,
+        dk_correct: dkCorrect,
+        dk_total: dkSeen + bothWrong
       }).then((ref) => {
         currentPlayerDocId = ref.id;
         return leaderboardCol.where('username', '==', playerName.trim()).get();
@@ -1149,6 +1385,7 @@
     headline.style.transform = 'translateY(-100vh)';
     headline.offsetHeight;
     headline.style.animation = 'headline-slam 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
+    showStats();
   }
 
   function confettiBurst() {
@@ -1340,10 +1577,10 @@
   window.addEventListener('mouseup', () => { if (isDragging) onDragEnd(); });
 
   playAgainBtn.addEventListener('click', () => {
-    gameOverEl.classList.remove('visible');
-    lobbyEl.classList.remove('hidden');
     hasPoppedForDocId = null;
+    startGame();
   });
+
 
   function tryStartFromLobby() {
     const name = (playerNameInput.value || '').trim();
