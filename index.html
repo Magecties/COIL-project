@@ -227,6 +227,193 @@
     }
     #play-again:hover, #play-again:active { transform: scale(1.05); box-shadow: 0 8px 28px rgba(255,107,53,0.5); }
 
+    #personal-best-banner {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(16px, 4vw, 20px);
+      color: var(--gold);
+      margin-bottom: 12px;
+      display: none;
+    }
+    #personal-best-banner.visible { display: block; }
+    #game-over-leaderboard-wrap, #lobby-leaderboard-wrap {
+      width: 100%; max-width: 400px; margin-bottom: 20px;
+      min-height: 400px; max-height: 440px; overflow-y: auto; overflow-x: hidden;
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
+      mask-image: linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%);
+      scroll-behavior: smooth;
+      background: rgba(0, 0, 0, 0.25);
+      border: 2px solid rgba(255, 107, 53, 0.35);
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+    }
+    #lobby-leaderboard-wrap { margin-bottom: 0; }
+    .leaderboard-header {
+      display: grid; grid-template-columns: 44px 1fr 52px minmax(88px, 1fr);
+      gap: 8px; padding: 8px 10px; font-size: clamp(13px, 3.5vw, 15px);
+      color: var(--orange); font-weight: 700; border-bottom: 1px solid rgba(255, 107, 53, 0.3);
+    }
+    .leaderboard-body { min-height: 0; }
+    .leaderboard-row {
+      display: grid; grid-template-columns: 44px 1fr 52px minmax(88px, 1fr);
+      gap: 8px; padding: 8px 10px; align-items: center;
+      min-height: 36px; font-size: clamp(13px, 3.5vw, 15px);
+      transition: transform 0.15s ease, background 0.15s ease;
+      transform-origin: left center; border-radius: 8px;
+    }
+    .leaderboard-row .name-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: text-decoration 0.15s; }
+    .leaderboard-row .time-cell { white-space: nowrap; min-width: 0; }
+    .leaderboard-row:hover { transform: scale(1.02); background: rgba(255,255,255,0.06); }
+    .leaderboard-row:hover .name-cell { text-decoration: underline; }
+    .leaderboard-row.rank-1, .leaderboard-row.rank-2, .leaderboard-row.rank-3 {
+      position: relative;
+      overflow: visible;
+    }
+    .leaderboard-row.highlight {
+      border-left: 3px solid var(--gold); background: rgba(244, 162, 97, 0.15);
+      box-shadow: inset 0 0 20px rgba(244, 162, 97, 0.2);
+      animation: highlight-glow 2.5s ease-in-out infinite;
+    }
+    @keyframes highlight-glow {
+      0%, 100% { box-shadow: inset 0 0 20px rgba(244, 162, 97, 0.2); }
+      50% { box-shadow: inset 0 0 28px rgba(244, 162, 97, 0.35); }
+    }
+    .leaderboard-row.entry-pop { animation: entry-pop 0.5s ease-out forwards; }
+    @keyframes entry-pop {
+      0% { transform: scale(0.8); opacity: 0.8; }
+      60% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .leaderboard-row.rank-1.entry-pop, .leaderboard-row.rank-2.entry-pop, .leaderboard-row.rank-3.entry-pop {
+      animation: entry-pop 0.5s ease-out forwards;
+    }
+    .leaderboard-row.row-displaced { animation: row-displaced 0.2s ease-out; }
+    @keyframes row-displaced {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(6px); }
+      100% { transform: translateY(0); }
+    }
+    .leaderboard-row.rank-1.row-displaced, .leaderboard-row.rank-2.row-displaced, .leaderboard-row.rank-3.row-displaced { animation: row-displaced 0.2s ease-out; }
+    .leaderboard-row.row-cascade { animation: row-cascade 0.4s ease-out forwards; }
+    @keyframes row-cascade {
+      from { transform: translateX(80px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .leaderboard-row.rank-1.row-cascade, .leaderboard-row.rank-2.row-cascade, .leaderboard-row.rank-3.row-cascade {
+      animation: row-cascade 0.4s ease-out forwards;
+    }
+    .leaderboard-row.row-new { animation: row-fly-up 0.5s cubic-bezier(0.34, 1.2, 0.64, 1) 0.1s forwards; transform: translateY(60px); opacity: 0; }
+    @keyframes row-fly-up {
+      from { transform: translateY(60px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .leaderboard-row.rank-1.row-new, .leaderboard-row.rank-2.row-new, .leaderboard-row.rank-3.row-new {
+      animation: row-fly-up 0.5s cubic-bezier(0.34, 1.2, 0.64, 1) 0.1s forwards;
+      transform: translateY(60px);
+      opacity: 0;
+    }
+    .leaderboard-row.rank-changed { animation: rank-changed-flash 0.3s ease-out; }
+    @keyframes rank-changed-flash {
+      0% { background: rgba(234, 226, 183, 0.25); }
+      100% { background: transparent; }
+    }
+    .leaderboard-row .rank-cell.rank-flash { animation: rank-num-flash 0.3s ease-out; }
+    @keyframes rank-num-flash { 0% { color: #fff; } 100% { color: inherit; } }
+    .leaderboard-row.pulse-silver { animation: pulse-silver 0.6s ease-out; }
+    @keyframes pulse-silver { 0%, 100% { box-shadow: none; } 50% { box-shadow: inset 0 0 20px rgba(192,192,192,0.4); } }
+    .leaderboard-row.pulse-bronze { animation: pulse-bronze 0.6s ease-out; }
+    @keyframes pulse-bronze { 0%, 100% { box-shadow: none; } 50% { box-shadow: inset 0 0 20px rgba(205,127,50,0.4); } }
+    /* Top 3 glow: same on lobby and game-over; opacity: 1st > 2nd > 3rd */
+    #lobby-leaderboard-wrap .leaderboard-row.rank-1::before,
+    #game-over-leaderboard-wrap .leaderboard-row.rank-1::before {
+      content: ''; position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+      background: linear-gradient(105deg, transparent 0%, rgba(255,200,80,0.12) 40%, rgba(255,220,120,0.35) 50%, rgba(255,200,80,0.12) 60%, transparent 100%);
+      background-size: 220% 100%; animation: shimmer 3s ease-in-out infinite;
+      pointer-events: none; border-radius: 8px;
+      box-shadow: inset 0 0 24px rgba(255, 200, 80, 0.2);
+    }
+    #lobby-leaderboard-wrap .leaderboard-row.rank-2::before,
+    #game-over-leaderboard-wrap .leaderboard-row.rank-2::before {
+      content: ''; position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+      background: linear-gradient(105deg, transparent 0%, rgba(192,192,210,0.06) 40%, rgba(230,230,245,0.18) 50%, rgba(192,192,210,0.06) 60%, transparent 100%);
+      background-size: 220% 100%; animation: shimmer 3s ease-in-out infinite;
+      pointer-events: none; border-radius: 8px;
+      box-shadow: inset 0 0 16px rgba(200, 200, 220, 0.1);
+    }
+    #lobby-leaderboard-wrap .leaderboard-row.rank-3::before,
+    #game-over-leaderboard-wrap .leaderboard-row.rank-3::before {
+      content: ''; position: absolute; left: 0; right: 0; top: 0; bottom: 0;
+      background: linear-gradient(105deg, transparent 0%, rgba(205,140,80,0.05) 40%, rgba(218,165,32,0.12) 50%, rgba(205,140,80,0.05) 60%, transparent 100%);
+      background-size: 220% 100%; animation: shimmer 3s ease-in-out infinite;
+      pointer-events: none; border-radius: 8px;
+      box-shadow: inset 0 0 14px rgba(205, 140, 80, 0.1);
+    }
+    @keyframes shimmer {
+      0% { background-position: 220% 0; }
+      100% { background-position: -220% 0; }
+    }
+    .crown-drop { animation: crown-drop 0.6s cubic-bezier(0.34, 1.4, 0.64, 1) forwards; }
+    @keyframes crown-drop {
+      from { transform: translateY(-28px); opacity: 0; }
+      70% { transform: translateY(2px); opacity: 1; }
+      85% { transform: translateY(-4px); }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    .leaderboard-row .rank-cell { position: relative; }
+    .leaderboard-row .rank-cell .crown-emoji { display: inline-block; }
+    #game-over-leaderboard-wrap .leaderboard-row.rank-1 .crown-emoji,
+    #lobby-leaderboard-wrap .leaderboard-row.rank-1 .crown-emoji { display: inline-block; }
+
+    #lobby {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      background: var(--navy);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: max(env(safe-area-inset-top), 16px) 16px 24px;
+      overflow-y: auto;
+    }
+    #lobby.hidden { display: none; }
+    #lobby .lobby-title {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(24px, 6vw, 32px);
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+    #lobby .name-input-wrap { margin-bottom: 16px; width: 100%; max-width: 280px; }
+    #lobby #player-name-input {
+      width: 100%;
+      padding: 12px 16px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      background: rgba(255,255,255,0.08);
+      border: 2px solid rgba(255,107,53,0.4);
+      border-radius: 12px;
+      color: var(--white);
+    }
+    #lobby #player-name-input::placeholder { color: rgba(234, 226, 183, 0.5); }
+    #lobby .name-error { font-size: 12px; color: var(--danish-red); margin-top: 4px; display: none; }
+    #lobby .name-error.visible { display: block; }
+    #lobby .leaderboard-title { font-family: 'Fraunces', serif; font-size: clamp(14px, 3.8vw, 16px); margin: 16px 0 8px; opacity: 0.9; }
+    #lobby #lobby-start-btn {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(18px, 4.5vw, 22px);
+      font-weight: 700;
+      padding: 16px 40px;
+      margin-top: 20px;
+      background: linear-gradient(135deg, var(--orange), var(--danish-red));
+      color: white;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 6px 24px rgba(255,107,53,0.4);
+    }
+    #lobby #lobby-start-btn:hover { transform: scale(1.03); }
+    #lobby #lobby-start-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
     @keyframes headline-slam {
       to { transform: translateY(0); }
     }
@@ -325,6 +512,19 @@
   </style>
 </head>
 <body>
+  <div id="lobby">
+    <h1 class="lobby-title">Myth Busters: NL × DK</h1>
+    <div class="name-input-wrap">
+      <input type="text" id="player-name-input" placeholder="Your name or team name" maxlength="20" autocomplete="off" />
+      <div class="name-error" id="name-error">Name must be 2–20 characters</div>
+    </div>
+    <div class="leaderboard-title">Top 10 — Live</div>
+    <div id="lobby-leaderboard-wrap">
+      <div class="leaderboard-header"><span>#</span><span>Name</span><span>Score</span><span>Time</span></div>
+      <div class="leaderboard-body" id="leaderboard-tbody"></div>
+    </div>
+    <button type="button" id="lobby-start-btn">Start</button>
+  </div>
   <div id="game-wrap">
     <canvas id="fire-canvas"></canvas>
     <div id="streak-wrap">
@@ -357,14 +557,32 @@
     <h1 class="headline">GAME OVER</h1>
     <p class="score-text" id="final-score">0</p>
     <p class="rating-text" id="rating-text">—</p>
+    <div id="personal-best-banner">New personal best 🏆</div>
+    <div id="game-over-leaderboard-wrap">
+      <div class="leaderboard-header"><span>#</span><span>Name</span><span>Score</span><span>Time</span></div>
+      <div class="leaderboard-body" id="game-over-leaderboard-tbody"></div>
+    </div>
     <button id="play-again">Play Again</button>
   </div>
   <canvas id="confetti-canvas"></canvas>
   <div id="whiteout"></div>
 
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
   <script>
 (function() {
   'use strict';
+
+  // 🔧 PASTE YOUR FIREBASE CONFIG HERE
+  const firebaseConfig = {
+    apiKey: "AIzaSyCv7W9_YHs0f7vlifVkLp4iIkoPqDNyZsk",
+    authDomain: "coil-7809d.firebaseapp.com",
+    projectId: "coil-7809d",
+    storageBucket: "coil-7809d.firebasestorage.app",
+    messagingSenderId: "279890602490",
+    appId: "1:279890602490:web:0b8ae8247159d2b1ec5c43",
+    measurementId: "G-MNK68LJMFM"
+  };
 
   const THRESHOLD = 80;
   const RATINGS = [
@@ -418,11 +636,162 @@
   const finalScoreEl = document.getElementById('final-score');
   const ratingTextEl = document.getElementById('rating-text');
   const playAgainBtn = document.getElementById('play-again');
+  const lobbyEl = document.getElementById('lobby');
+  const playerNameInput = document.getElementById('player-name-input');
+  const nameErrorEl = document.getElementById('name-error');
+  const leaderboardTbody = document.getElementById('leaderboard-tbody');
+  const gameOverLeaderboardTbody = document.getElementById('game-over-leaderboard-tbody');
+  const lobbyStartBtn = document.getElementById('lobby-start-btn');
+  const personalBestBanner = document.getElementById('personal-best-banner');
   const onFireFlash = document.getElementById('on-fire-flash');
   const onFireText = document.getElementById('on-fire-text');
   const whiteoutEl = document.getElementById('whiteout');
   const confettiCanvas = document.getElementById('confetti-canvas');
   const cc = confettiCanvas.getContext('2d');
+
+  let playerName = '';
+  let maxStreakThisGame = 0;
+  let latestLeaderboardEntries = [];
+  let currentPlayerDocId = null;
+  let unsubscribeLeaderboard = null;
+  let firestore = null;
+  let leaderboardCol = null;
+  let previousLeaderboardEntries = [];
+  let hasPoppedForDocId = null;
+
+  const hasFirebaseConfig = firebaseConfig && typeof firebaseConfig.apiKey === 'string' && firebaseConfig.apiKey.length > 1;
+  if (typeof firebase !== 'undefined' && hasFirebaseConfig) {
+    try {
+      firebase.initializeApp(firebaseConfig);
+      firestore = firebase.firestore();
+      leaderboardCol = firestore.collection('leaderboard');
+      unsubscribeLeaderboard = leaderboardCol.orderBy('score', 'desc').limit(10).onSnapshot((snapshot) => {
+        const nextEntries = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+          timestamp: doc.data().timestamp
+        }));
+        const prevIds = new Set(previousLeaderboardEntries.map(e => e.id));
+        const prevById = new Map(previousLeaderboardEntries.map(e => [e.id, e]));
+        const newEntryId = previousLeaderboardEntries.length > 0 ? (nextEntries.find(e => !prevIds.has(e.id))?.id || null) : null;
+        const rankChangedIds = new Set();
+        const displacedIds = new Set();
+        nextEntries.forEach((entry, i) => {
+          const rank = i + 1;
+          const prev = prevById.get(entry.id);
+          if (prev && prev.rank !== rank) rankChangedIds.add(entry.id);
+          if (newEntryId && newEntryId !== entry.id) {
+            const newRank = nextEntries.findIndex(e => e.id === newEntryId) + 1;
+            if (rank > newRank) displacedIds.add(entry.id);
+          }
+        });
+        const isCascade = previousLeaderboardEntries.length === 0 && nextEntries.length > 0;
+        latestLeaderboardEntries = nextEntries;
+        previousLeaderboardEntries = nextEntries.map((e, i) => ({ id: e.id, rank: i + 1, score: e.score }));
+        renderLeaderboard(leaderboardTbody, latestLeaderboardEntries, null, { newEntryId, rankChangedIds, displacedIds, isCascade });
+        if (gameOverEl.classList.contains('visible')) {
+          renderLeaderboard(gameOverLeaderboardTbody, latestLeaderboardEntries, currentPlayerDocId, { newEntryId, rankChangedIds, displacedIds, isCascade: false });
+        }
+      }, (err) => console.warn('Leaderboard listener error', err));
+    } catch (e) { console.warn('Firebase init error', e); }
+  }
+
+  function timeAgo(timestamp) {
+    if (!timestamp) return '—';
+    const date = timestamp.toDate ? timestamp.toDate() : (timestamp.seconds ? new Date(timestamp.seconds * 1000) : null);
+    if (!date) return '—';
+    const sec = Math.max(0, Math.floor((Date.now() - date) / 1000));
+    if (sec < 60) return sec + ' sec ago';
+    const min = Math.floor(sec / 60);
+    if (min < 60) return min + ' min ago';
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return hr + ' hr ago';
+    const d = Math.floor(hr / 24);
+    return d + ' day' + (d === 1 ? '' : 's') + ' ago';
+  }
+
+  function rankEmoji(rank) {
+    if (rank === 1) return '👑';
+    if (rank === 2) return '🥈';
+    if (rank === 3) return '🥉';
+    return '';
+  }
+
+  function animateScore(el, target, duration) {
+    if (target == null || isNaN(target)) return;
+    const start = performance.now();
+    function tick(now) {
+      const t = Math.min((now - start) / duration, 1);
+      const easeOut = 1 - (1 - t) * (1 - t);
+      const val = Math.round(target * easeOut);
+      el.textContent = val;
+      if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function renderLeaderboard(tbody, entries, highlightDocId, opts) {
+    if (!tbody) return;
+    opts = opts || {};
+    const { newEntryId, rankChangedIds, displacedIds, isCascade } = opts;
+    const isGameOver = (tbody === gameOverLeaderboardTbody);
+    tbody.innerHTML = '';
+    entries.forEach((entry, i) => {
+      const rank = i + 1;
+      const row = document.createElement('div');
+      row.className = 'leaderboard-row';
+      row.setAttribute('data-doc-id', entry.id);
+      if (rank <= 3) row.classList.add('rank-' + rank);
+      if (entry.id === highlightDocId) row.classList.add('highlight');
+      if (isCascade) {
+        row.classList.add('row-cascade');
+        row.style.animationDelay = (i * 80) + 'ms';
+      }
+      if (entry.id === newEntryId) row.classList.add('row-new');
+      if (rankChangedIds && rankChangedIds.has(entry.id)) row.classList.add('rank-changed');
+      if (displacedIds && displacedIds.has(entry.id)) row.classList.add('row-displaced');
+      if (isGameOver && entry.id === highlightDocId && highlightDocId && highlightDocId !== hasPoppedForDocId) {
+        row.classList.add('entry-pop');
+        hasPoppedForDocId = highlightDocId;
+      }
+      if (entry.id === newEntryId && rank === 2) row.classList.add('pulse-silver');
+      if (entry.id === newEntryId && rank === 3) row.classList.add('pulse-bronze');
+      const rankCell = document.createElement('div');
+      rankCell.className = 'rank-cell';
+      if (rank === 1 && entry.id === newEntryId) {
+        const crownSpan = document.createElement('span');
+        crownSpan.className = 'crown-emoji crown-drop';
+        crownSpan.textContent = '👑 ';
+        rankCell.appendChild(crownSpan);
+      } else if (rank <= 3) {
+        rankCell.appendChild(document.createTextNode(rankEmoji(rank) + ' '));
+      }
+      rankCell.appendChild(document.createTextNode(rank.toString()));
+      if (rankChangedIds && rankChangedIds.has(entry.id)) rankCell.classList.add('rank-flash');
+      row.appendChild(rankCell);
+      const nameCell = document.createElement('div');
+      nameCell.className = 'name-cell';
+      nameCell.textContent = (entry.username || '—').slice(0, 20);
+      row.appendChild(nameCell);
+      const scoreCell = document.createElement('div');
+      scoreCell.className = 'score-cell';
+      const scoreVal = document.createElement('span');
+      scoreVal.className = 'leaderboard-score-value';
+      const score = entry.score != null ? Number(entry.score) : null;
+      scoreVal.textContent = score != null ? '0' : '—';
+      scoreCell.appendChild(scoreVal);
+      row.appendChild(scoreCell);
+      const timeCell = document.createElement('div');
+      timeCell.className = 'time-cell';
+      timeCell.textContent = timeAgo(entry.timestamp);
+      row.appendChild(timeCell);
+      tbody.appendChild(row);
+      if (score != null && !isNaN(score)) {
+        const delay = isCascade ? i * 80 : 0;
+        setTimeout(() => animateScore(scoreVal, score, 600), delay);
+      } else if (scoreVal) scoreVal.textContent = '—';
+    });
+  }
 
   function resize() {
     const w = window.innerWidth, h = window.innerHeight;
@@ -446,6 +815,7 @@
   function startGame() {
     gameOver = false;
     streak = 0;
+    maxStreakThisGame = 0;
     deck = shuffle(MYTHS);
     updateStreak();
     streakWrap.classList.toggle('on-fire', false);
@@ -549,6 +919,7 @@
       const correct = deck[0].answer === isTrue;
         if (correct) {
         streak++;
+        maxStreakThisGame = Math.max(maxStreakThisGame, streak);
         updateStreak();
         fireSystem.setStreak(streak);
         screenShake(8);
@@ -705,6 +1076,33 @@
   function showGameOver(score) {
     finalScoreEl.textContent = 'Score: ' + score;
     ratingTextEl.textContent = RATINGS[Math.min(score, 8)];
+    personalBestBanner.classList.remove('visible');
+    currentPlayerDocId = null;
+    if (firestore && leaderboardCol && playerName) {
+      leaderboardCol.add({
+        username: playerName.trim().slice(0, 20),
+        score: score,
+        maxStreak: maxStreakThisGame,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      }).then((ref) => {
+        currentPlayerDocId = ref.id;
+        return leaderboardCol.where('username', '==', playerName.trim()).get();
+      }).then((snap) => {
+        let previousBest = 0;
+        snap.docs.forEach(d => {
+          if (d.id !== currentPlayerDocId) previousBest = Math.max(previousBest, d.data().score || 0);
+        });
+        if (score > previousBest) personalBestBanner.classList.add('visible');
+        renderLeaderboard(gameOverLeaderboardTbody, latestLeaderboardEntries, currentPlayerDocId);
+        showGameOverUI();
+      }).catch(() => showGameOverUI());
+    } else {
+      renderLeaderboard(gameOverLeaderboardTbody, latestLeaderboardEntries, null);
+      showGameOverUI();
+    }
+  }
+
+  function showGameOverUI() {
     gameOverEl.classList.add('visible');
     const headline = gameOverEl.querySelector('.headline');
     headline.style.animation = 'none';
@@ -903,12 +1301,56 @@
 
   playAgainBtn.addEventListener('click', () => {
     gameOverEl.classList.remove('visible');
-    startGame();
+    lobbyEl.classList.remove('hidden');
+    hasPoppedForDocId = null;
   });
+
+  function tryStartFromLobby() {
+    const name = (playerNameInput.value || '').trim();
+    if (name.length < 2 || name.length > 20) {
+      nameErrorEl.classList.add('visible');
+      return;
+    }
+    nameErrorEl.classList.remove('visible');
+    playerName = name;
+    lobbyEl.classList.add('hidden');
+    startGame();
+  }
+
+  lobbyStartBtn.addEventListener('click', tryStartFromLobby);
+  playerNameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') tryStartFromLobby(); });
+
+  const lobbyWrap = document.getElementById('lobby-leaderboard-wrap');
+  const gameOverWrap = document.getElementById('game-over-leaderboard-wrap');
+  let leaderboardPaused = { lobby: false, gameOver: false };
+  function setPaused(wrap, paused) {
+    if (wrap === lobbyWrap) leaderboardPaused.lobby = paused;
+    else if (wrap === gameOverWrap) leaderboardPaused.gameOver = paused;
+  }
+  [lobbyWrap, gameOverWrap].forEach(wrap => {
+    if (!wrap) return;
+    wrap.addEventListener('mouseenter', () => setPaused(wrap, true));
+    wrap.addEventListener('mouseleave', () => setPaused(wrap, false));
+    wrap.addEventListener('touchstart', () => setPaused(wrap, true), { passive: true });
+    wrap.addEventListener('touchend', () => { setTimeout(() => setPaused(wrap, false), 800); }, { passive: true });
+  });
+  setInterval(() => {
+    [lobbyWrap, gameOverWrap].forEach((wrap, idx) => {
+      if (!wrap || (idx === 0 && leaderboardPaused.lobby) || (idx === 1 && leaderboardPaused.gameOver)) return;
+      const sh = wrap.scrollHeight, ch = wrap.clientHeight;
+      if (sh <= ch) return;
+      const st = wrap.scrollTop;
+      if (st + ch >= sh - 2) {
+        wrap.scrollTop = 0;
+      } else {
+        wrap.scrollTop = st + 1;
+      }
+    });
+  }, 60);
 
   resize();
   fireLoop();
-  startGame();
+  lobbyEl.classList.remove('hidden');
 })();
   </script>
 </body>
