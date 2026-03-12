@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Myth Busters: NL × DK</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;1,400&family=DM+Sans:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #1A1A2E;
+      --orange: #FF6B35;
+      --danish-red: #C8102E;
+      --gold: #F4A261;
+      --amber: #E9C46A;
+      --white: #EAE2B7;
+      --threshold: 80px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow: hidden;
+      background: var(--navy);
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #game-wrap {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+
+    #fire-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    #streak-wrap {
+      position: relative;
+      z-index: 2;
+      padding: max(12px, env(safe-area-inset-top)) 16px 8px;
+      text-align: center;
+    }
+    #streak-label {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(14px, 4vw, 18px);
+      opacity: 0.9;
+      letter-spacing: 0.05em;
+    }
+    #streak-num {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(36px, 12vw, 56px);
+      font-weight: 700;
+      color: var(--orange);
+      text-shadow: 0 0 20px rgba(255,107,53,0.5);
+      line-height: 1.1;
+    }
+    #streak-wrap.on-fire #streak-num { color: var(--gold); text-shadow: 0 0 24px rgba(244,162,97,0.8); }
+
+    #cards-zone {
+      flex: 1;
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+      padding: 16px;
+    }
+
+    .card-container {
+      position: absolute;
+      width: min(92vw, 340px);
+      aspect-ratio: 3 / 4;
+      max-height: 75vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      will-change: transform;
+    }
+    .card-container.idle { transition: none; }
+    .card-container.dragging { transition: none; }
+    .card-container.snap-back { transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .card-container.launching { transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1); pointer-events: none; }
+
+    .myth-card {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(145deg, #252547 0%, #1A1A2E 100%);
+      border: 3px solid rgba(255,107,53,0.4);
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+      position: relative;
+      overflow: hidden;
+    }
+    .myth-card.glow-true { box-shadow: 0 0 40px rgba(0,200,100,0.6), 0 12px 40px rgba(0,0,0,0.5); border-color: #00c864; }
+    .myth-card.glow-false { box-shadow: 0 0 40px rgba(200,16,46,0.6), 0 12px 40px rgba(0,0,0,0.5); border-color: var(--danish-red); }
+
+    .myth-card .country-tag {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      opacity: 0.8;
+    }
+    .myth-card .myth-text {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(18px, 5.2vw, 24px);
+      line-height: 1.35;
+      margin: 8px 0;
+      padding: 0 4px;
+    }
+    .stamp {
+      position: absolute;
+      font-family: 'Fraunces', serif;
+      font-weight: 700;
+      font-size: clamp(28px, 8vw, 42px);
+      letter-spacing: 0.1em;
+      opacity: 0.9;
+      pointer-events: none;
+    }
+    .stamp.true-stamp { color: #00c864; transform: rotate(-8deg); bottom: 22%; }
+    .stamp.false-stamp { color: var(--danish-red); transform: rotate(6deg); bottom: 22%; }
+
+    #fact-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      cursor: pointer;
+    }
+    #fact-overlay.visible { display: flex; }
+    .fact-paper {
+      background: linear-gradient(180deg, #2d2d44 0%, #1f1f35 100%);
+      border: 2px solid rgba(255,107,53,0.5);
+      border-radius: 12px;
+      padding: 20px 24px;
+      max-width: 90%;
+      max-height: 70%;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      position: relative;
+    }
+    .fact-paper::before {
+      content: '';
+      position: absolute;
+      top: -6px; left: 10%; right: 10%;
+      height: 8px;
+      background: repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(0,0,0,0.3) 8px, rgba(0,0,0,0.3) 10px);
+      border-radius: 2px;
+    }
+    .fact-paper .fact-label { font-size: 12px; color: var(--orange); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.1em; }
+    .fact-paper .fact-body { font-size: clamp(15px, 4vw, 18px); line-height: 1.5; }
+
+    #game-over {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      background: var(--navy);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+    #game-over.visible { display: flex; }
+    #game-over .headline {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(28px, 8vw, 42px);
+      font-weight: 700;
+      margin-bottom: 12px;
+      transform: translateY(-100vh);
+      animation: headline-slam 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    #game-over .score-text { font-size: clamp(20px, 6vw, 28px); color: var(--orange); margin-bottom: 8px; }
+    #game-over .rating-text { font-family: 'Fraunces', serif; font-size: clamp(16px, 4.5vw, 20px); line-height: 1.4; margin-bottom: 24px; max-width: 360px; }
+    #play-again {
+      font-family: 'Fraunces', serif;
+      font-size: clamp(20px, 5vw, 26px);
+      font-weight: 700;
+      padding: 18px 40px;
+      background: linear-gradient(135deg, var(--orange), var(--danish-red));
+      color: white;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 6px 24px rgba(255,107,53,0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    #play-again:hover, #play-again:active { transform: scale(1.05); box-shadow: 0 8px 28px rgba(255,107,53,0.5); }
+
+    @keyframes headline-slam {
+      to { transform: translateY(0); }
+    }
+
+    .on-fire-flash {
+      position: fixed;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      opacity: 0;
+      background: radial-gradient(ellipse at center bottom, rgba(255,107,53,0.25) 0%, transparent 60%);
+    }
+    .on-fire-flash.flash { animation: flash 0.4s ease-out; }
+    @keyframes flash {
+      0% { opacity: 0; }
+      50% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    #on-fire-text {
+      position: fixed;
+      bottom: 18%;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 4;
+      font-family: 'Fraunces', serif;
+      font-size: clamp(22px, 6vw, 32px);
+      font-weight: 700;
+      color: var(--gold);
+      text-shadow: 0 0 20px rgba(244,162,97,0.9);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    #on-fire-text.visible { animation: on-fire-pulse 0.5s ease-in-out 3; opacity: 1; }
+    @keyframes on-fire-pulse {
+      0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+      50% { opacity: 0.85; transform: translateX(-50%) scale(1.05); }
+    }
+
+    #screen-shake {
+      position: fixed;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .card-fragment {
+      position: fixed;
+      width: 40px;
+      height: 50px;
+      background: linear-gradient(145deg, #252547, #1A1A2E);
+      border: 2px solid rgba(255,107,53,0.4);
+      border-radius: 6px;
+      pointer-events: none;
+      z-index: 8;
+    }
+
+    #confetti-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 15;
+      pointer-events: none;
+    }
+
+    #whiteout {
+      position: fixed;
+      inset: 0;
+      background: #fff;
+      z-index: 14;
+      opacity: 0;
+      pointer-events: none;
+    }
+    #whiteout.explode { animation: whiteout 1.2s ease-out forwards; }
+    @keyframes whiteout {
+      0% { opacity: 0; }
+      15% { opacity: 1; }
+      85% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    .ripple {
+      position: fixed;
+      border-radius: 50%;
+      border: 4px solid var(--danish-red);
+      opacity: 0.8;
+      transform: scale(0);
+      pointer-events: none;
+      z-index: 7;
+    }
+    .ripple.expand { animation: ripple 0.6s ease-out forwards; }
+    @keyframes ripple {
+      to { transform: scale(4); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div id="game-wrap">
+    <canvas id="fire-canvas"></canvas>
+    <div id="streak-wrap">
+      <div id="streak-label">STREAK</div>
+      <div id="streak-num">0</div>
+    </div>
+    <div id="cards-zone">
+      <div class="card-container" id="current-card">
+        <div class="myth-card" id="myth-card">
+          <span class="country-tag" id="country-tag">NL / DK</span>
+          <p class="myth-text" id="myth-text">Myth text</p>
+          <span class="stamp true-stamp" id="stamp-true">TRUE</span>
+          <span class="stamp false-stamp" id="stamp-false">FALSE</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="on-fire-flash" id="on-fire-flash"></div>
+  <div id="on-fire-text">ON FIRE 🔥</div>
+  <div id="screen-shake"></div>
+  <div id="fact-overlay">
+    <div class="fact-paper" id="fact-paper">
+      <div class="fact-label">Did you know?</div>
+      <div class="fact-body" id="fact-body"></div>
+    </div>
+  </div>
+  <div id="game-over">
+    <h1 class="headline">GAME OVER</h1>
+    <p class="score-text" id="final-score">0</p>
+    <p class="rating-text" id="rating-text">—</p>
+    <button id="play-again">Play Again</button>
+  </div>
+  <canvas id="confetti-canvas"></canvas>
+  <div id="whiteout"></div>
+
+  <script>
+(function() {
+  'use strict';
+
+  const THRESHOLD = 80;
+  const RATINGS = [
+    "🥔 You thought a stroopwafel was a type of shoe",
+    "🐟 Barely smarter than a pickled herring",
+    "🚲 Lost your bike and your dignity",
+    "🌷 Somewhere between a tulip and a tourist",
+    "🧀 Gouda enough, but not great",
+    "🌊 Holding back the tide... just about",
+    "🥐 Wienerbrød-level knowledge. Respectable.",
+    "🏰 Could survive a Dutch-Danish pub quiz",
+    "👑 Honorary citizen of both countries. Legendary."
+  ];
+
+  const MYTHS = [
+    { myth: "Dutch people are the tallest in the world", answer: true, fact: "The average Dutch male stands 182.9cm tall — they grew 20cm taller over 150 years due to diet, healthcare and natural selection.", country: "nl" },
+    { myth: "Denmark is the happiest country in the world", answer: false, fact: "Denmark consistently ranks top 3 but Finland has held #1 in recent years. Denmark rarely drops below #2 though.", country: "dk" },
+    { myth: "The Netherlands has more bicycles than people", answer: true, fact: "There are ~23 million bikes for ~17.9 million people — 1.3 bikes per person. Amsterdam alone has more bikes than cars.", country: "nl" },
+    { myth: "The cheese danish was invented in Denmark", answer: false, fact: "It was invented by Austrian bakers brought to Denmark in the 1850s. Danes call it wienerbrød — Viennese bread.", country: "dk" },
+    { myth: "About 26% of the Netherlands is below sea level", answer: true, fact: "Without dikes and pumping systems, large parts of the country would be regularly flooded.", country: "nl" },
+    { myth: "Hygge has a direct English translation", answer: false, fact: "Hygge has no single English equivalent. It loosely means cozy contentment — but it's a whole lifestyle philosophy, not just a word.", country: "dk" },
+    { myth: "Dutch is the closest language to English", answer: false, fact: "Dutch and English are closely related West Germanic languages, but Frisian — also spoken in the Netherlands — is actually even closer to English.", country: "both" },
+    { myth: "Denmark has more pigs than people", answer: true, fact: "Denmark has ~15 million pigs for 5.9 million people — roughly 4 pigs per person and one of the world's biggest pork exporters.", country: "dk" }
+  ];
+
+  const isMobile = () => window.innerWidth < 768;
+  const maxParticles = () => isMobile() ? 60 : 150;
+
+  let deck = [];
+  let streak = 0;
+  let gameOver = false;
+  let dragStartX = 0, dragStartY = 0, currentX = 0;
+  let isDragging = false;
+  let idleAngle = 0, idleY = 0, idlePhase = 0;
+  let idleRAF = null;
+
+  const wrap = document.getElementById('game-wrap');
+  const fireCanvas = document.getElementById('fire-canvas');
+  const ctx = fireCanvas.getContext('2d');
+  const streakWrap = document.getElementById('streak-wrap');
+  const streakNum = document.getElementById('streak-num');
+  const cardContainer = document.getElementById('current-card');
+  const mythCard = document.getElementById('myth-card');
+  const mythText = document.getElementById('myth-text');
+  const countryTag = document.getElementById('country-tag');
+  const stampTrue = document.getElementById('stamp-true');
+  const stampFalse = document.getElementById('stamp-false');
+  const factOverlay = document.getElementById('fact-overlay');
+  const factBody = document.getElementById('fact-body');
+  const gameOverEl = document.getElementById('game-over');
+  const finalScoreEl = document.getElementById('final-score');
+  const ratingTextEl = document.getElementById('rating-text');
+  const playAgainBtn = document.getElementById('play-again');
+  const onFireFlash = document.getElementById('on-fire-flash');
+  const onFireText = document.getElementById('on-fire-text');
+  const whiteoutEl = document.getElementById('whiteout');
+  const confettiCanvas = document.getElementById('confetti-canvas');
+  const cc = confettiCanvas.getContext('2d');
+
+  function resize() {
+    const w = window.innerWidth, h = window.innerHeight;
+    fireCanvas.width = w;
+    fireCanvas.height = h;
+    confettiCanvas.width = w;
+    confettiCanvas.height = h;
+    fireSystem.resize(w, h);
+  }
+  window.addEventListener('resize', resize);
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function startGame() {
+    gameOver = false;
+    streak = 0;
+    deck = shuffle(MYTHS);
+    updateStreak();
+    streakWrap.classList.toggle('on-fire', false);
+    factOverlay.classList.remove('visible');
+    gameOverEl.classList.remove('visible');
+    whiteoutEl.classList.remove('explode');
+    fireSystem.reset();
+    showNextCard();
+    startIdle();
+  }
+
+  function showNextCard() {
+    if (deck.length === 0) {
+      perfectWin();
+      return;
+    }
+    const m = deck[0];
+    mythText.textContent = m.myth;
+    countryTag.textContent = m.country === 'both' ? 'NL / DK' : m.country.toUpperCase();
+    stampTrue.style.display = 'none';
+    stampFalse.style.display = 'none';
+    mythCard.classList.remove('glow-true', 'glow-false');
+    mythCard.style.visibility = '';
+    cardContainer.classList.remove('snap-back', 'launching', 'dragging');
+    cardContainer.classList.add('idle');
+    cardContainer.style.transform = 'translate(0, 0) rotate(0deg)';
+  }
+
+  function updateStreak() {
+    streakNum.textContent = streak;
+    streakWrap.classList.toggle('on-fire', streak >= 5);
+  }
+
+  function getClientX(e) {
+    if (e.touches && e.touches.length) return e.touches[0].clientX;
+    return e.clientX;
+  }
+
+  function startIdle() {
+    let last = performance.now();
+    function idle(t) {
+      if (gameOver || isDragging) { idleRAF = requestAnimationFrame(idle); return; }
+      const dt = (t - last) / 1000;
+      last = t;
+      idlePhase += dt * 1.2;
+      idleAngle = Math.sin(idlePhase) * 2;
+      idleY = Math.sin(idlePhase * 0.7) * 4;
+      if (cardContainer.classList.contains('idle'))
+        cardContainer.style.transform = `translate(0, ${idleY}px) rotate(${idleAngle}deg)`;
+      idleRAF = requestAnimationFrame(idle);
+    }
+    idleRAF = requestAnimationFrame(idle);
+  }
+
+  function onDragStart(clientX) {
+    if (gameOver || factOverlay.classList.contains('visible')) return;
+    isDragging = true;
+    dragStartX = clientX;
+    currentX = 0;
+    cardContainer.classList.remove('idle', 'snap-back');
+    cardContainer.classList.add('dragging');
+    stampTrue.style.display = 'none';
+    stampFalse.style.display = 'none';
+    mythCard.classList.remove('glow-true', 'glow-false');
+  }
+
+  function onDragMove(clientX) {
+    if (!isDragging) return;
+    currentX = clientX - dragStartX;
+    const rot = currentX * 0.15;
+    cardContainer.style.transform = `translate(${currentX}px, ${idleY}px) rotate(${rot}deg)`;
+    if (currentX >= THRESHOLD) {
+      stampTrue.style.display = 'block';
+      mythCard.classList.add('glow-true');
+      mythCard.classList.remove('glow-false');
+      stampFalse.style.display = 'none';
+    } else if (currentX <= -THRESHOLD) {
+      stampFalse.style.display = 'block';
+      mythCard.classList.add('glow-false');
+      mythCard.classList.remove('glow-true');
+      stampTrue.style.display = 'none';
+    } else {
+      stampTrue.style.display = 'none';
+      stampFalse.style.display = 'none';
+      mythCard.classList.remove('glow-true', 'glow-false');
+    }
+  }
+
+  function onDragEnd() {
+    if (!isDragging) return;
+    const pastThreshold = currentX >= THRESHOLD || currentX <= -THRESHOLD;
+    const isTrue = currentX >= THRESHOLD;
+    isDragging = false;
+
+    if (pastThreshold) {
+      cardContainer.classList.remove('dragging');
+      cardContainer.classList.add('launching');
+      const dir = isTrue ? 1 : -1;
+      const off = dir * (window.innerWidth + 200);
+      cardContainer.style.transform = `translate(${off}px, ${idleY}px) rotate(${dir * 25}deg)`;
+      const correct = deck[0].answer === isTrue;
+        if (correct) {
+        streak++;
+        updateStreak();
+        fireSystem.setStreak(streak);
+        screenShake(8);
+        if (streak >= 7) {
+          onFireFlash.classList.add('flash');
+          setTimeout(() => onFireFlash.classList.remove('flash'), 400);
+        }
+        if (streak === 3) {
+          onFireText.classList.add('visible');
+          setTimeout(() => onFireText.classList.remove('visible'), 2000);
+        }
+        const answeredMyth = deck[0];
+        deck.shift();
+        setTimeout(() => showFact(answeredMyth), 350);
+      } else {
+        wrongAnswer();
+      }
+    } else {
+      cardContainer.classList.remove('dragging');
+      cardContainer.classList.add('snap-back');
+      cardContainer.style.transform = `translate(0, ${idleY}px) rotate(${idleAngle}deg)`;
+      stampTrue.style.display = 'none';
+      stampFalse.style.display = 'none';
+      mythCard.classList.remove('glow-true', 'glow-false');
+      setTimeout(() => {
+        cardContainer.classList.remove('snap-back');
+        cardContainer.classList.add('idle');
+      }, 400);
+    }
+  }
+
+  function showFact(answeredMyth) {
+    const fact = answeredMyth ? answeredMyth.fact : null;
+    if (!fact) {
+      slideNextCard();
+      return;
+    }
+    factBody.textContent = '';
+    factOverlay.classList.add('visible');
+    let i = 0;
+    const factLen = fact.length;
+    const typeInterval = setInterval(() => {
+      if (i < factLen) {
+        factBody.textContent += fact[i];
+        i++;
+      } else {
+        clearInterval(typeInterval);
+      }
+    }, 25);
+    const dismiss = () => {
+      clearInterval(typeInterval);
+      factBody.textContent = fact;
+      factOverlay.classList.remove('visible');
+      slideNextCard();
+      factOverlay.removeEventListener('click', dismiss);
+      clearTimeout(autoDismiss);
+    };
+    factOverlay.addEventListener('click', dismiss);
+    const autoDismiss = setTimeout(dismiss, 4000);
+  }
+
+  function slideNextCard() {
+    if (deck.length === 0) {
+      perfectWin();
+      return;
+    }
+    showNextCard();
+  }
+
+  function perfectWin() {
+    whiteoutEl.classList.add('explode');
+    fireSystem.setStreak(0);
+    confettiBurst();
+    setTimeout(() => {
+      showGameOver(streak);
+    }, 800);
+  }
+
+  function wrongAnswer() {
+    gameOver = true;
+    screenShake(25);
+    cardContainer.classList.remove('launching');
+    mythCard.style.transition = 'none';
+    setTimeout(() => {
+      redRipple();
+      shatterCard();
+      fireSystem.extinguish();
+      setTimeout(() => showGameOver(streak), 1200);
+    }, 300);
+  }
+
+  function redRipple() {
+    const r = document.createElement('div');
+    r.className = 'ripple';
+    r.style.left = cardContainer.offsetLeft + cardContainer.offsetWidth / 2 + 'px';
+    r.style.top = cardContainer.offsetTop + cardContainer.offsetHeight / 2 + 'px';
+    r.style.width = '20px';
+    r.style.height = '20px';
+    r.style.marginLeft = '-10px';
+    r.style.marginTop = '-10px';
+    document.body.appendChild(r);
+    r.offsetHeight;
+    r.classList.add('expand');
+    setTimeout(() => r.remove(), 700);
+  }
+
+  function shatterCard() {
+    const rect = cardContainer.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+    const fragments = 12;
+    for (let i = 0; i < fragments; i++) {
+      const f = document.createElement('div');
+      f.className = 'card-fragment';
+      const angle = (i / fragments) * Math.PI * 2 + Math.random() * 0.5;
+      const dist = 80 + Math.random() * 120;
+      const tx = Math.cos(angle) * dist;
+      const ty = Math.sin(angle) * dist;
+      f.style.left = cx + 'px';
+      f.style.top = cy + 'px';
+      f.style.marginLeft = '-20px';
+      f.style.marginTop = '-25px';
+      f.style.transform = `translate(${tx}px, ${ty}px) rotate(${angle * 180 / Math.PI}deg)`;
+      f.style.opacity = '0';
+      f.style.transition = 'transform 0.5s ease-out, opacity 0.3s';
+      document.body.appendChild(f);
+      requestAnimationFrame(() => {
+        f.style.opacity = '1';
+        f.style.transform += ' scale(0.3)';
+      });
+      setTimeout(() => f.remove(), 600);
+    }
+    mythCard.style.visibility = 'hidden';
+  }
+
+  function screenShake(intensity) {
+    const orig = wrap.style.transform || '';
+    const steps = 8;
+    let s = 0;
+    const run = () => {
+      if (s >= steps) {
+        wrap.style.transform = orig;
+        return;
+      }
+      const x = (Math.random() - 0.5) * intensity;
+      const y = (Math.random() - 0.5) * intensity;
+      wrap.style.transform = `translate(${x}px, ${y}px)`;
+      s++;
+      setTimeout(run, 35);
+    };
+    run();
+  }
+
+  function showGameOver(score) {
+    finalScoreEl.textContent = 'Score: ' + score;
+    ratingTextEl.textContent = RATINGS[Math.min(score, 8)];
+    gameOverEl.classList.add('visible');
+    const headline = gameOverEl.querySelector('.headline');
+    headline.style.animation = 'none';
+    headline.style.transform = 'translateY(-100vh)';
+    headline.offsetHeight;
+    headline.style.animation = 'headline-slam 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
+  }
+
+  function confettiBurst() {
+    const w = confettiCanvas.width, h = confettiCanvas.height;
+    const pieces = [];
+    const colors = ['#FF6B35', '#C8102E', '#E9C46A', '#F4A261', '#EAE2B7'];
+    for (let i = 0; i < 80; i++) {
+      pieces.push({
+        x: w / 2, y: h / 2,
+        vx: (Math.random() - 0.5) * 14,
+        vy: (Math.random() - 0.5) * 14 - 4,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        size: 4 + Math.random() * 6,
+        rot: Math.random() * 360,
+        rv: (Math.random() - 0.5) * 20
+      });
+    }
+    let frame = 0;
+    function drawConfetti() {
+      cc.clearRect(0, 0, w, h);
+      frame++;
+      if (frame > 120) return;
+      pieces.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.3;
+        p.rot += p.rv;
+        cc.save();
+        cc.translate(p.x, p.y);
+        cc.rotate(p.rot * Math.PI / 180);
+        cc.fillStyle = p.color;
+        cc.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        cc.restore();
+      });
+      requestAnimationFrame(drawConfetti);
+    }
+    drawConfetti();
+  }
+
+  const fireSystem = {
+    particles: [],
+    w: 0, h: 0,
+    streak: 0,
+    smoke: [],
+    resize(w, h) { this.w = w; this.h = h; },
+    reset() {
+      this.particles = [];
+      this.smoke = [];
+      this.streak = 0;
+    },
+    setStreak(s) { this.streak = s; },
+    extinguish() {
+      for (let i = 0; i < 30; i++) {
+        this.smoke.push({
+          x: this.w / 2 + (Math.random() - 0.5) * 200,
+          y: this.h,
+          vx: (Math.random() - 0.5) * 2,
+          vy: -2 - Math.random() * 3,
+          life: 1,
+          size: 20 + Math.random() * 40
+        });
+      }
+      this.streak = 0;
+    },
+    addParticle() {
+      if (this.particles.length >= maxParticles()) return;
+      const level = this.streak;
+      let yBase = this.h;
+      if (level >= 5) yBase = this.h * 0.5;
+      if (level >= 7) yBase = this.h * 0.2;
+      this.particles.push({
+        x: Math.random() * this.w,
+        y: yBase + Math.random() * 80,
+        vx: (Math.random() - 0.5) * 2,
+        vy: -2 - Math.random() * 4,
+        life: 1,
+        size: 4 + Math.random() * 8,
+        hue: 25 + Math.random() * 35
+      });
+    },
+    tick() {
+      const level = this.streak;
+      if (level >= 1 && this.particles.length < maxParticles()) {
+        const rate = level <= 2 ? 0.03 : level <= 4 ? 0.12 : level <= 6 ? 0.2 : 0.35;
+        if (Math.random() < rate) this.addParticle();
+      }
+      this.particles = this.particles.filter(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy -= 0.02;
+        p.life -= 0.012;
+        return p.life > 0;
+      });
+      this.smoke = this.smoke.filter(s => {
+        s.x += s.vx;
+        s.y += s.vy;
+        s.life -= 0.02;
+        return s.life > 0;
+      });
+    },
+    draw() {
+      if (!ctx) return;
+      ctx.fillStyle = 'rgba(26, 26, 46, 0.15)';
+      ctx.fillRect(0, 0, this.w, this.h);
+      this.smoke.forEach(s => {
+        ctx.globalAlpha = s.life;
+        ctx.fillStyle = `rgba(80, 80, 80, ${s.life})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+      this.particles.forEach(p => {
+        ctx.globalAlpha = p.life;
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 2);
+        g.addColorStop(0, `hsla(${p.hue}, 90%, 60%, 0.9)`);
+        g.addColorStop(0.5, `hsla(${p.hue}, 85%, 50%, 0.4)`);
+        g.addColorStop(1, 'transparent');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * 2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+      if (this.streak >= 3 && this.streak < 8) {
+        const grad = ctx.createLinearGradient(0, this.h, 0, 0);
+        const cutoff = this.streak >= 7 ? 0 : this.streak >= 5 ? 0.5 : 0.85;
+        grad.addColorStop(0, 'rgba(255, 100, 30, 0.15)');
+        grad.addColorStop(cutoff, 'transparent');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, this.w, this.h);
+      }
+      if (this.streak >= 7) {
+        const border = 12;
+        const g = ctx.createLinearGradient(0, 0, this.w, this.h);
+        g.addColorStop(0, 'rgba(255, 80, 20, 0.4)');
+        g.addColorStop(0.5, 'rgba(255, 150, 50, 0.25)');
+        g.addColorStop(1, 'rgba(255, 80, 20, 0.4)');
+        ctx.strokeStyle = g;
+        ctx.lineWidth = border;
+        ctx.strokeRect(border / 2, border / 2, this.w - border, this.h - border);
+      }
+    }
+  };
+
+  setInterval(() => {
+    if (fireSystem.streak >= 5 && fireSystem.particles.length < maxParticles()) {
+      fireSystem.particles.push({
+        x: fireSystem.w / 2 + (Math.random() - 0.5) * 80,
+        y: 70,
+        vx: (Math.random() - 0.5) * 1.5,
+        vy: -1.5 - Math.random() * 2,
+        life: 1,
+        size: 3 + Math.random() * 5,
+        hue: 28 + Math.random() * 25
+      });
+    }
+  }, 200);
+
+  function fireLoop() {
+    fireSystem.tick();
+    fireSystem.draw();
+    requestAnimationFrame(fireLoop);
+  }
+
+  cardContainer.addEventListener('touchstart', e => { e.preventDefault(); onDragStart(getClientX(e)); }, { passive: false });
+  cardContainer.addEventListener('touchmove', e => { e.preventDefault(); onDragMove(getClientX(e)); }, { passive: false });
+  cardContainer.addEventListener('touchend', e => { e.preventDefault(); onDragEnd(); }, { passive: false });
+  cardContainer.addEventListener('mousedown', e => { e.preventDefault(); onDragStart(e.clientX); });
+  window.addEventListener('mousemove', e => { if (isDragging) onDragMove(e.clientX); });
+  window.addEventListener('mouseup', () => { if (isDragging) onDragEnd(); });
+
+  playAgainBtn.addEventListener('click', () => {
+    gameOverEl.classList.remove('visible');
+    startGame();
+  });
+
+  resize();
+  fireLoop();
+  startGame();
+})();
+  </script>
+</body>
+</html>
